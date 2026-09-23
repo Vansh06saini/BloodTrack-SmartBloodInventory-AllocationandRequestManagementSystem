@@ -182,3 +182,16 @@
     border-right-color: var(--border);
   }
 }
+.request-id-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.request-id-button:hover {
+  text-decoration: underline;
+}
