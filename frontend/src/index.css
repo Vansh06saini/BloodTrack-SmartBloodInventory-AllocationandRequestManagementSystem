@@ -672,6 +672,11 @@ button {
   color: #6b21a8;
 }
 
+.status-badge.paused {
+  background: #fff1e5;
+  color: #c2410c;
+}
+
 .status-badge.rejected {
   background: #fee2e2;
   color: #991b1b;
