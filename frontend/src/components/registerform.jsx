@@ -5,11 +5,11 @@ function RegisterForm() {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        hospitalName: "",
+        name: "",
         email: "",
         password: "",
         confirmPassword: "",
-        contactNumber: "",
+        contact: "",
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +30,7 @@ function RegisterForm() {
     }
 
     function validateForm() {
-        if (!formData.hospitalName.trim()) {
+        if (!formData.name.trim()) {
             return "Please enter your hospital or full name.";
         }
 
@@ -42,7 +42,7 @@ function RegisterForm() {
             return "Please enter a valid email address.";
         }
 
-        if (!formData.contactNumber.trim()) {
+        if (!formData.contact.trim()) {
             return "Please enter your contact number.";
         }
 
@@ -61,7 +61,7 @@ function RegisterForm() {
         return "";
     }
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault();
 
         const validationError = validateForm();
@@ -74,11 +74,30 @@ function RegisterForm() {
         setIsLoading(true);
         setError("");
 
-        setTimeout(() => {
-            setIsLoading(false);
-            alert("Registration successful! Redirecting to login...");
+        try {
+            const response = await
+                fetch("http://localhost:5000/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json",
+
+                    },
+                    body: JSON.stringify(formData)
+                });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || "Registration failed");
+            }
+
             navigate("/login");
-        }, 1000);
+
+        } catch (error) {
+            console.error("Registration error:", error);
+            setError(error.message || "Registration failed.Please try again");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -97,9 +116,9 @@ function RegisterForm() {
                     <label htmlFor="hospital-name">Name of hospital / person</label>
                     <input
                         id="hospital-name"
-                        name="hospitalName"
+                        name="name"
                         type="text"
-                        value={formData.hospitalName}
+                        value={formData.name}
                         onChange={handleChange}
                         placeholder="Enter the name of your hospital or your full name"
                         autoComplete="name"
@@ -123,9 +142,9 @@ function RegisterForm() {
                     <label htmlFor="contact-number">Contact number</label>
                     <input
                         id="contact-number"
-                        name="contactNumber"
+                        name="contact"
                         type="tel"
-                        value={formData.contactNumber}
+                        value={formData.contact}
                         onChange={handleChange}
                         placeholder="Enter your contact number"
                         autoComplete="tel"

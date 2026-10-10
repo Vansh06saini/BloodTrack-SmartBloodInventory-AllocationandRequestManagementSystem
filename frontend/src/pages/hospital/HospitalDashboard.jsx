@@ -1,75 +1,118 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function HospitalDashboard() {
-  const [requests] = useState([
-    {
-      id: "REQ-1001",
-      bloodGroup: "O+",
-      quantity: 3,
-      priority: "Emergency",
-      status: "Allocated",
-      date: "20 Sep 2026",
-    },
-    {
-      id: "REQ-1002",
-      bloodGroup: "A+",
-      quantity: 2,
-      priority: "Urgent",
-      status: "Waiting",
-      date: "20 Sep 2026",
-    },
-    {
-      id: "REQ-1003",
-      bloodGroup: "B+",
-      quantity: 4,
-      priority: "Routine",
-      status: "Completed",
-      date: "19 Sep 2026",
-    },
-    {
-      id: "REQ-1004",
-      bloodGroup: "O-",
-      quantity: 2,
-      priority: "Emergency",
-      status: "Waiting",
-      date: "19 Sep 2026",
-    },
-  ]);
+  const navigate = useNavigate();
 
-  const pendingRequests = requests.filter(
-    (request) => request.status === "Waiting"
-  ).length;
+  const [storedUser, setStoredUser] = useState(() => {
+    try {
+      const userStr = sessionStorage.getItem("user") || localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  const allocatedRequests = requests.filter(
-    (request) => request.status === "Allocated"
-  ).length;
+  const hospitalId = storedUser?.id;
+  const hospitalName = storedUser?.name || "Hospital Staff";
 
-  const emergencyRequests = requests.filter(
-    (request) => request.priority === "Emergency"
-  ).length;
+  const [summary, setSummary] = useState({
+    total_requests: 0,
+    waiting_requests: 0,
+    processing_requests: 0,
+    allocated_requests: 0,
+    completed_requests: 0,
+    rejected_requests: 0,
+    emergency_requests: 0,
+  });
 
-  const completedRequests = requests.filter(
-    (request) => request.status === "Completed"
-  ).length;
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchDashboardData = async () => {
+    if (!hospitalId) {
+      setIsLoading(false);
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await fetch(
+        `http://localhost:5000/api/hospital/dashboard?hospitalId=${hospitalId}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load dashboard data");
+      }
+
+      if (data.requestsSummary) {
+        setSummary({
+          total_requests: Number(data.requestsSummary.total_requests || 0),
+          waiting_requests: Number(data.requestsSummary.waiting_requests || 0),
+          processing_requests: Number(data.requestsSummary.processing_requests || 0),
+          allocated_requests: Number(data.requestsSummary.allocated_requests || 0),
+          completed_requests: Number(data.requestsSummary.completed_requests || 0),
+          rejected_requests: Number(data.requestsSummary.rejected_requests || 0),
+          emergency_requests: Number(data.requestsSummary.emergency_requests || 0),
+        });
+      }
+
+      if (data.recentRequests) {
+        setRequests(data.recentRequests);
+      }
+    } catch (err) {
+      console.error("Error fetching hospital dashboard data:", err);
+      setError("Unable to connect to server for live hospital data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [hospitalId]);
 
   function getStatusClass(status) {
-    return status.toLowerCase();
+    return (status || "waiting").toLowerCase();
   }
 
   function getPriorityClass(priority) {
-    return priority.toLowerCase();
+    return (priority || "routine").toLowerCase();
   }
 
-  function goToRequestPage() {
-    window.location.href = "/hospital/request";
+  function getInitials(name) {
+    if (!name) return "H";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   }
 
-  function goToRequestsPage() {
-    window.location.href = "/hospital/requests";
+  function formatDate(dateStr) {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime())
+      ? dateStr
+      : d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
   }
 
   function logout() {
-    window.location.href = "/login";
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   }
 
   return (
@@ -80,35 +123,46 @@ function HospitalDashboard() {
 
           <div>
             <h2>Smart Blood</h2>
-            <p>Hospital Portal</p>
+            <p>Portal</p>
           </div>
         </div>
 
         <nav className="sidebar-navigation">
-          <button className="sidebar-link active">
+          <button
+            type="button"
+            className="sidebar-link active"
+            onClick={() => navigate("/hospital/dashboard")}
+          >
             Dashboard
           </button>
 
           <button
+            type="button"
             className="sidebar-link"
-            onClick={goToRequestPage}
+            onClick={() => navigate("/hospital/request")}
           >
             New Blood Request
           </button>
 
           <button
+            type="button"
             className="sidebar-link"
-            onClick={goToRequestsPage}
+            onClick={() => navigate("/hospital/requests")}
           >
             My Requests
           </button>
 
-          <button className="sidebar-link">
+          <button
+            type="button"
+            className="sidebar-link"
+            onClick={() => navigate("/hospital/dashboard")}
+          >
             Profile
           </button>
         </nav>
 
         <button
+          type="button"
           className="sidebar-logout"
           onClick={logout}
         >
@@ -119,23 +173,32 @@ function HospitalDashboard() {
       <main className="hospital-main">
         <header className="hospital-header">
           <div>
-            <p className="header-label">HOSPITAL PORTAL</p>
-            <h1>Hospital Dashboard</h1>
+            <p className="header-label">USER PORTAL</p>
+            <h1>User Dashboard</h1>
           </div>
 
           <div className="hospital-user">
-            <div className="user-avatar">CC</div>
+            <div className="user-avatar">{getInitials(hospitalName)}</div>
 
             <div>
-              <strong>City Care Hospital</strong>
-              <span>Hospital Staff</span>
+              <strong>{hospitalName}</strong>
+
             </div>
           </div>
         </header>
 
+        {error && (
+          <div
+            className="admin-form-message error"
+            style={{ marginTop: "20px" }}
+          >
+            {error}
+          </div>
+        )}
+
         <section className="dashboard-welcome">
           <div>
-            <h2>Welcome back, City Care Hospital</h2>
+            <h2>Welcome back, {hospitalName}</h2>
 
             <p>
               Monitor your blood requests and keep track of their
@@ -144,8 +207,9 @@ function HospitalDashboard() {
           </div>
 
           <button
+            type="button"
             className="primary-dashboard-button"
-            onClick={goToRequestPage}
+            onClick={() => navigate("/hospital/request")}
           >
             Create Blood Request
           </button>
@@ -155,7 +219,7 @@ function HospitalDashboard() {
           <div className="dashboard-stat-card">
             <div>
               <p>Total Requests</p>
-              <h3>{requests.length}</h3>
+              <h3>{isLoading ? "..." : summary.total_requests}</h3>
             </div>
 
             <span className="stat-label">All requests</span>
@@ -164,7 +228,7 @@ function HospitalDashboard() {
           <div className="dashboard-stat-card">
             <div>
               <p>Pending</p>
-              <h3>{pendingRequests}</h3>
+              <h3>{isLoading ? "..." : summary.waiting_requests}</h3>
             </div>
 
             <span className="stat-label">Awaiting allocation</span>
@@ -173,7 +237,7 @@ function HospitalDashboard() {
           <div className="dashboard-stat-card">
             <div>
               <p>Allocated</p>
-              <h3>{allocatedRequests}</h3>
+              <h3>{isLoading ? "..." : summary.allocated_requests}</h3>
             </div>
 
             <span className="stat-label">Blood allocated</span>
@@ -182,7 +246,7 @@ function HospitalDashboard() {
           <div className="dashboard-stat-card">
             <div>
               <p>Emergency</p>
-              <h3>{emergencyRequests}</h3>
+              <h3>{isLoading ? "..." : summary.emergency_requests}</h3>
             </div>
 
             <span className="stat-label">Emergency requests</span>
@@ -198,8 +262,9 @@ function HospitalDashboard() {
               </div>
 
               <button
+                type="button"
                 className="view-all-button"
-                onClick={goToRequestsPage}
+                onClick={() => navigate("/hospital/requests")}
               >
                 View all
               </button>
@@ -209,7 +274,7 @@ function HospitalDashboard() {
               <table className="request-table">
                 <thead>
                   <tr>
-                    <th>Request</th>
+                    <th>Request Code</th>
                     <th>Blood Group</th>
                     <th>Quantity</th>
                     <th>Priority</th>
@@ -219,43 +284,65 @@ function HospitalDashboard() {
                 </thead>
 
                 <tbody>
-                  {requests.map((request) => (
-                    <tr key={request.id}>
-                      <td>
-                        <strong>{request.id}</strong>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "30px", color: "#858b91" }}>
+                        Loading requests...
                       </td>
-
-                      <td>
-                        <span className="blood-group">
-                          {request.bloodGroup}
-                        </span>
-                      </td>
-
-                      <td>{request.quantity} units</td>
-
-                      <td>
-                        <span
-                          className={`priority-badge ${getPriorityClass(
-                            request.priority
-                          )}`}
-                        >
-                          {request.priority}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span
-                          className={`status-badge ${getStatusClass(
-                            request.status
-                          )}`}
-                        >
-                          {request.status}
-                        </span>
-                      </td>
-
-                      <td>{request.date}</td>
                     </tr>
-                  ))}
+                  ) : requests.length > 0 ? (
+                    requests.map((request) => (
+                      <tr key={request.request_id || request.request_code}>
+                        <td>
+                          <strong>{request.request_code}</strong>
+                        </td>
+
+                        <td>
+                          <span className="blood-group">
+                            {request.blood_group}
+                          </span>
+                        </td>
+
+                        <td>{request.quantity} units</td>
+
+                        <td>
+                          <span
+                            className={`priority-badge ${getPriorityClass(
+                              request.priority
+                            )}`}
+                          >
+                            {request.priority}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`status-badge ${getStatusClass(
+                              request.status
+                            )}`}
+                          >
+                            {request.status}
+                          </span>
+                        </td>
+
+                        <td>{formatDate(request.created_at || request.required_date)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="6"
+                        style={{
+                          textAlign: "center",
+                          padding: "36px",
+                          color: "#858b91",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        No blood requests found. Click &quot;Create Blood Request&quot; to submit one.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -280,7 +367,21 @@ function HospitalDashboard() {
                 </span>
               </div>
 
-              <strong>{pendingRequests}</strong>
+              <strong>{isLoading ? "..." : summary.waiting_requests}</strong>
+            </div>
+
+            <div className="overview-item">
+              <div>
+                <span className="overview-title">
+                  Processing requests
+                </span>
+
+                <span className="overview-description">
+                  Currently in progress
+                </span>
+              </div>
+
+              <strong>{isLoading ? "..." : summary.processing_requests}</strong>
             </div>
 
             <div className="overview-item">
@@ -294,7 +395,7 @@ function HospitalDashboard() {
                 </span>
               </div>
 
-              <strong>{allocatedRequests}</strong>
+              <strong>{isLoading ? "..." : summary.allocated_requests}</strong>
             </div>
 
             <div className="overview-item">
@@ -308,7 +409,7 @@ function HospitalDashboard() {
                 </span>
               </div>
 
-              <strong>{emergencyRequests}</strong>
+              <strong>{isLoading ? "..." : summary.emergency_requests}</strong>
             </div>
 
             <div className="overview-item">
@@ -322,7 +423,7 @@ function HospitalDashboard() {
                 </span>
               </div>
 
-              <strong>{completedRequests}</strong>
+              <strong>{isLoading ? "..." : summary.completed_requests}</strong>
             </div>
           </div>
         </section>

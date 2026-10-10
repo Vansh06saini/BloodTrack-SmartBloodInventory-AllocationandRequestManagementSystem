@@ -12,6 +12,7 @@ function CreateRequest() {
   });
 
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -22,8 +23,9 @@ function CreateRequest() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
     setMessage("");
 
     if (!formData.bloodGroup) {
@@ -46,18 +48,73 @@ function CreateRequest() {
       return;
     }
 
-    setMessage(
-      "Blood request submitted successfully. The request is now waiting for processing."
-    );
+    setIsSubmitting(true);
+
+    try {
+      const storedUserStr = sessionStorage.getItem("user") || localStorage.getItem("user");
+      const storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+      
+      if (!storedUser?.id) {
+        throw new Error("You must be logged in to submit a request. Please sign in again.");
+      }
+
+      const hospitalId = storedUser.id;
+
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/requests",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            hospitalId,
+            bloodGroup: formData.bloodGroup,
+            quantity: Number(formData.quantity),
+            priority: formData.priority,
+            requiredDate: formData.requiredDate,
+            reason: "Blood requirement submitted by hospital",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit blood request");
+      }
+
+      setMessage(
+        "Blood request submitted successfully. The request is now waiting for processing."
+      );
+
+      setFormData({
+        bloodGroup: "",
+        quantity: "",
+        priority: "",
+        requiredDate: "",
+      });
+    } catch (error) {
+      console.error("Error submitting blood request:", error);
+
+      setMessage(
+        error.message || "Failed to submit blood request. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="request-page">
       <div className="request-container">
+
         <div className="request-header">
           <div>
             <p className="request-label">Hospital Portal</p>
+
             <h1>Create Blood Request</h1>
+
             <p>
               Enter the blood requirement details to submit a new request.
             </p>
@@ -74,9 +131,13 @@ function CreateRequest() {
 
         <div className="request-card">
           <form onSubmit={handleSubmit}>
+
             <div className="form-grid">
+
               <div className="form-group">
-                <label htmlFor="bloodGroup">Blood Group</label>
+                <label htmlFor="bloodGroup">
+                  Blood Group
+                </label>
 
                 <select
                   id="bloodGroup"
@@ -85,6 +146,7 @@ function CreateRequest() {
                   onChange={handleChange}
                 >
                   <option value="">Select blood group</option>
+
                   <option value="A+">A+</option>
                   <option value="A-">A-</option>
                   <option value="B+">B+</option>
@@ -97,7 +159,9 @@ function CreateRequest() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="quantity">Quantity</label>
+                <label htmlFor="quantity">
+                  Quantity
+                </label>
 
                 <input
                   type="number"
@@ -115,7 +179,9 @@ function CreateRequest() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="priority">Priority</label>
+                <label htmlFor="priority">
+                  Priority
+                </label>
 
                 <select
                   id="priority"
@@ -124,14 +190,25 @@ function CreateRequest() {
                   onChange={handleChange}
                 >
                   <option value="">Select priority</option>
-                  <option value="Emergency">Emergency</option>
-                  <option value="Urgent">Urgent</option>
-                  <option value="Routine">Routine</option>
+
+                  <option value="EMERGENCY">
+                    Emergency
+                  </option>
+
+                  <option value="URGENT">
+                    Urgent
+                  </option>
+
+                  <option value="ROUTINE">
+                    Routine
+                  </option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="requiredDate">Required Date</label>
+                <label htmlFor="requiredDate">
+                  Required Date
+                </label>
 
                 <input
                   type="date"
@@ -141,6 +218,7 @@ function CreateRequest() {
                   onChange={handleChange}
                 />
               </div>
+
             </div>
 
             {message && (
@@ -156,6 +234,7 @@ function CreateRequest() {
             )}
 
             <div className="form-actions">
+
               <button
                 type="button"
                 className="cancel-button"
@@ -164,10 +243,18 @@ function CreateRequest() {
                 Cancel
               </button>
 
-              <button type="submit" className="submit-request-button">
-                Submit Blood Request
+              <button
+                type="submit"
+                className="submit-request-button"
+                disabled={isSubmitting}
+              >
+                {isSubmitting
+                  ? "Submitting..."
+                  : "Submit Blood Request"}
               </button>
+
             </div>
+
           </form>
         </div>
       </div>

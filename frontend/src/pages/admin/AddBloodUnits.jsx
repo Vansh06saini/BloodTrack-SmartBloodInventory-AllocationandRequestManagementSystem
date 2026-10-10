@@ -13,6 +13,7 @@ function AddBloodUnits() {
     });
 
     const [message, setMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -25,7 +26,7 @@ function AddBloodUnits() {
         setMessage("");
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         if (
@@ -39,8 +40,11 @@ function AddBloodUnits() {
             return;
         }
 
-        if (Number(formData.quantity) <= 0) {
-            setMessage("Quantity must be greater than zero.");
+        if (
+            !Number.isInteger(Number(formData.quantity)) ||
+            Number(formData.quantity) <= 0
+        ) {
+            setMessage("Quantity must be a positive number.");
             return;
         }
 
@@ -49,17 +53,49 @@ function AddBloodUnits() {
             return;
         }
 
-        setMessage(
-            `${formData.quantity} ${formData.bloodGroup} blood unit(s) added successfully.`
-        );
+        try {
+            setIsSubmitting(true);
+            setMessage("");
 
-        setFormData({
-            bloodGroup: "",
-            quantity: "",
-            collectionDate: "",
-            expiryDate: "",
-            batchNumber: "",
-        });
+            const response = await fetch(
+                "http://localhost:5000/api/blood-units",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        bloodGroup: formData.bloodGroup,
+                        quantity: Number(formData.quantity),
+                        collectionDate: formData.collectionDate,
+                        expiryDate: formData.expiryDate,
+                        batchNumber: formData.batchNumber,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setMessage(data.message || "Failed to add blood units.");
+                return;
+            }
+
+            setMessage(data.message);
+
+            setFormData({
+                bloodGroup: "",
+                quantity: "",
+                collectionDate: "",
+                expiryDate: "",
+                batchNumber: "",
+            });
+        } catch (error) {
+            console.error("Error adding blood units:", error);
+            setMessage("Unable to connect to the server.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -75,6 +111,7 @@ function AddBloodUnits() {
                     </button>
 
                     <h1>Add Blood Units</h1>
+
                     <p>Enter details of newly received blood units.</p>
                 </div>
             </header>
@@ -83,8 +120,11 @@ function AddBloodUnits() {
                 <section className="admin-form-card">
                     <form onSubmit={handleSubmit}>
                         <div className="admin-form-grid">
+
                             <div className="admin-form-group">
-                                <label htmlFor="bloodGroup">Blood Group</label>
+                                <label htmlFor="bloodGroup">
+                                    Blood Group
+                                </label>
 
                                 <select
                                     id="bloodGroup"
@@ -92,7 +132,10 @@ function AddBloodUnits() {
                                     value={formData.bloodGroup}
                                     onChange={handleChange}
                                 >
-                                    <option value="">Select blood group</option>
+                                    <option value="">
+                                        Select blood group
+                                    </option>
+
                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
                                     <option value="B+">B+</option>
@@ -105,7 +148,9 @@ function AddBloodUnits() {
                             </div>
 
                             <div className="admin-form-group">
-                                <label htmlFor="quantity">Number of Units</label>
+                                <label htmlFor="quantity">
+                                    Number of Units
+                                </label>
 
                                 <input
                                     id="quantity"
@@ -119,7 +164,9 @@ function AddBloodUnits() {
                             </div>
 
                             <div className="admin-form-group">
-                                <label htmlFor="collectionDate">Collection Date</label>
+                                <label htmlFor="collectionDate">
+                                    Collection Date
+                                </label>
 
                                 <input
                                     id="collectionDate"
@@ -131,7 +178,9 @@ function AddBloodUnits() {
                             </div>
 
                             <div className="admin-form-group">
-                                <label htmlFor="expiryDate">Expiry Date</label>
+                                <label htmlFor="expiryDate">
+                                    Expiry Date
+                                </label>
 
                                 <input
                                     id="expiryDate"
@@ -143,7 +192,9 @@ function AddBloodUnits() {
                             </div>
 
                             <div className="admin-form-group admin-form-full-width">
-                                <label htmlFor="batchNumber">Batch Number</label>
+                                <label htmlFor="batchNumber">
+                                    Batch Number
+                                </label>
 
                                 <input
                                     id="batchNumber"
@@ -155,7 +206,8 @@ function AddBloodUnits() {
                                 />
 
                                 <small>
-                                    Use the blood bank batch or collection reference number.
+                                    Use the blood bank batch or collection
+                                    reference number.
                                 </small>
                             </div>
                         </div>
@@ -176,13 +228,21 @@ function AddBloodUnits() {
                             <button
                                 type="button"
                                 className="admin-cancel-button"
-                                onClick={() => navigate("/admin/dashboard")}
+                                onClick={() =>
+                                    navigate("/admin/dashboard")
+                                }
                             >
                                 Cancel
                             </button>
 
-                            <button type="submit" className="admin-submit-button">
-                                Add Blood Units
+                            <button
+                                type="submit"
+                                className="admin-submit-button"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting
+                                    ? "Adding..."
+                                    : "Add Blood Units"}
                             </button>
                         </div>
                     </form>

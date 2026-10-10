@@ -45,7 +45,7 @@ function LoginForm() {
         return "";
     }
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault();
 
         const validationError = validateForm();
@@ -58,18 +58,40 @@ function LoginForm() {
         setIsLoading(true);
         setError("");
 
-        setTimeout(() => {
-            setIsLoading(false);
-
-            console.log("Login information:", {
-                email: formData.email,
-                role: formData.role,
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
             });
 
-            alert(
-                `Demo login successful. Selected role: ${formData.role}`
-            );
-        }, 1000);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || "Login failed");
+            }
+
+            // Store session token and user info (sessionStorage isolates tabs)
+            sessionStorage.setItem("token", data.token);
+            sessionStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            // Role-based redirection
+            const userRole = (data.user?.role || formData.role || "").toUpperCase();
+            if (userRole === "ADMIN") {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/hospital/dashboard");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            setError(error.message || "Login failed. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
