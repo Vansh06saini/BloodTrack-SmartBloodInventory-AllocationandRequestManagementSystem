@@ -19,6 +19,7 @@ function HospitalDashboard() {
   const [summary, setSummary] = useState({
     total_requests: 0,
     waiting_requests: 0,
+    paused_requests: 0,
     processing_requests: 0,
     allocated_requests: 0,
     completed_requests: 0,
@@ -55,6 +56,7 @@ function HospitalDashboard() {
         setSummary({
           total_requests: Number(data.requestsSummary.total_requests || 0),
           waiting_requests: Number(data.requestsSummary.waiting_requests || 0),
+          paused_requests: Number(data.requestsSummary.paused_requests || 0),
           processing_requests: Number(data.requestsSummary.processing_requests || 0),
           allocated_requests: Number(data.requestsSummary.allocated_requests || 0),
           completed_requests: Number(data.requestsSummary.completed_requests || 0),
@@ -155,9 +157,9 @@ function HospitalDashboard() {
           <button
             type="button"
             className="sidebar-link"
-            onClick={() => navigate("/hospital/dashboard")}
+            onClick={() => navigate("/hospital/donate")}
           >
-            Profile
+            Donate Blood
           </button>
         </nav>
 
