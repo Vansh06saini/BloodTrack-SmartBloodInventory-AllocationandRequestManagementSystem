@@ -2,11 +2,12 @@ import db from "../db.js";
 
 export const getHospitalDashboard = async (req, res) => {
     try {
-        const hospitalId = req.query.hospitalId;
+        // Identity comes from the verified token, never from the client.
+        const hospitalId = req.user.id;
 
-        if (!hospitalId) {
-            return res.status(400).json({
-                message: "Hospital ID is required"
+        if (req.query.hospitalId && String(req.query.hospitalId) !== String(hospitalId)) {
+            return res.status(403).json({
+                message: "You can only view your own hospital dashboard"
             });
         }
 
@@ -83,8 +84,11 @@ export const getHospitalDashboard = async (req, res) => {
 export const createHospitalRequest = async (req, res) => {
 
     //extract input
+    // Identity comes from the verified token, never from the client.
+    const hospitalId = req.user.id;
+
     const {
-        hospitalId,
+        hospitalId: submittedHospitalId,
         bloodGroup,
         quantity,
         priority,
@@ -94,8 +98,13 @@ export const createHospitalRequest = async (req, res) => {
 
     //validate input
 
+    if (submittedHospitalId && String(submittedHospitalId) !== String(hospitalId)) {
+        return res.status(403).json({
+            message: "You can only submit requests for your own hospital"
+        });
+    }
+
     if (
-        !hospitalId ||
         !bloodGroup ||
         !quantity ||
         !priority ||

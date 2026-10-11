@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../../utils/auth";
 
 function CreateRequest() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ function CreateRequest() {
 
       const hospitalId = storedUser.id;
 
-      const response = await fetch(
+      const response = await authFetch(
         "http://localhost:5000/api/hospital/requests",
         {
           method: "POST",

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../../utils/auth";
 
 function AddBloodUnits() {
     const navigate = useNavigate();
@@ -57,7 +58,7 @@ function AddBloodUnits() {
             setIsSubmitting(true);
             setMessage("");
 
-            const response = await fetch(
+            const response = await authFetch(
                 "http://localhost:5000/api/blood-units",
                 {
                     method: "POST",

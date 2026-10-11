@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    validateContact,
+    validateEmail,
+    validateNewPassword,
+} from "../utils/validation";
 
 function RegisterForm() {
     const navigate = useNavigate();
@@ -34,24 +39,13 @@ function RegisterForm() {
             return "Please enter your hospital or full name.";
         }
 
-        if (!formData.email.trim()) {
-            return "Please enter your email address.";
-        }
+        const rulesError =
+            validateEmail(formData.email) ||
+            validateContact(formData.contact) ||
+            validateNewPassword(formData.password);
 
-        if (!formData.email.includes("@")) {
-            return "Please enter a valid email address.";
-        }
-
-        if (!formData.contact.trim()) {
-            return "Please enter your contact number.";
-        }
-
-        if (!formData.password.trim()) {
-            return "Please enter your password.";
-        }
-
-        if (formData.password.length < 6) {
-            return "Password must contain at least 6 characters.";
+        if (rulesError) {
+            return rulesError;
         }
 
         if (formData.password !== formData.confirmPassword) {
@@ -160,7 +154,7 @@ function RegisterForm() {
                             type={showPassword ? "text" : "password"}
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Enter your password (min 6 chars)"
+                            placeholder="Enter your password (min 8 chars, letters + numbers)"
                             autoComplete="new-password"
                         />
                         <button
