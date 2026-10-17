@@ -1,58 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function MyRequests() {
   const navigate = useNavigate();
 
-  const [requests] = useState([
-    {
-      id: "REQ-1001",
-      bloodGroup: "O+",
-      quantity: 3,
-      priority: "Emergency",
-      requiredDate: "2026-09-22",
-      status: "Allocated",
-    },
-    {
-      id: "REQ-1002",
-      bloodGroup: "A+",
-      quantity: 2,
-      priority: "Urgent",
-      requiredDate: "2026-09-23",
-      status: "Waiting",
-    },
-    {
-      id: "REQ-1003",
-      bloodGroup: "B+",
-      quantity: 4,
-      priority: "Routine",
-      requiredDate: "2026-09-25",
-      status: "Completed",
-    },
-    {
-      id: "REQ-1004",
-      bloodGroup: "O-",
-      quantity: 2,
-      priority: "Emergency",
-      requiredDate: "2026-09-22",
-      status: "Waiting",
-    },
-  ]);
+  const [storedUser] = useState(() => {
+    try {
+      const userStr = sessionStorage.getItem("user") || localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  });
 
+  const hospitalId = storedUser?.id;
+
+  const [requests, setRequests] = useState([]);
   const [filter, setFilter] = useState("All");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchRequests = async () => {
+    if (!hospitalId) {
+      setIsLoading(false);
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await fetch(
+        `http://localhost:5000/api/hospital/requests?hospitalId=${hospitalId}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load blood requests");
+      }
+
+      setRequests(data.requests || []);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+      setError(err.message || "Failed to load live requests");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [hospitalId]);
 
   const filteredRequests =
     filter === "All"
       ? requests
-      : requests.filter((request) => request.status === filter);
+      : requests.filter(
+        (request) => (request.status || "").toUpperCase() === filter.toUpperCase()
+      );
 
   const getStatusClass = (status) => {
-    return `request-status ${status.toLowerCase()}`;
+    return `request-status ${(status || "waiting").toLowerCase()}`;
   };
 
   const getPriorityClass = (priority) => {
-    return `request-priority ${priority.toLowerCase()}`;
+    return `request-priority ${(priority || "routine").toLowerCase()}`;
   };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime())
+      ? dateStr
+      : d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+  };
+
+  // Summary counts
+  const totalCount = requests.length;
+  const waitingCount = requests.filter((r) => (r.status || "").toUpperCase() === "WAITING").length;
+  const pausedCount = requests.filter((r) => (r.status || "").toUpperCase() === "PAUSED").length;
+  const allocatedCount = requests.filter((r) => (r.status || "").toUpperCase() === "ALLOCATED").length;
+  const completedCount = requests.filter((r) => (r.status || "").toUpperCase() === "COMPLETED").length;
 
   return (
     <div className="my-requests-page">
@@ -62,7 +96,7 @@ function MyRequests() {
             <p className="request-label">Hospital Portal</p>
             <h1>My Blood Requests</h1>
             <p>
-              View and track the blood requests submitted by your hospital.
+              View and track real-time blood requests submitted by your hospital.
             </p>
           </div>
 
@@ -75,39 +109,45 @@ function MyRequests() {
           </button>
         </div>
 
+        {error && (
+          <div
+            style={{
+              padding: "12px 16px",
+              marginBottom: "16px",
+              backgroundColor: "#fee2e2",
+              color: "#991b1b",
+              borderRadius: "6px",
+              border: "1px solid #fca5a5"
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         <div className="request-summary">
           <div className="summary-box">
             <span>Total Requests</span>
-            <strong>{requests.length}</strong>
+            <strong>{isLoading ? "..." : totalCount}</strong>
           </div>
 
           <div className="summary-box">
             <span>Waiting</span>
-            <strong>
-              {requests.filter((request) => request.status === "Waiting").length}
-            </strong>
+            <strong>{isLoading ? "..." : waitingCount}</strong>
+          </div>
+
+          <div className="summary-box">
+            <span>Paused (Preempted)</span>
+            <strong>{isLoading ? "..." : pausedCount}</strong>
           </div>
 
           <div className="summary-box">
             <span>Allocated</span>
-            <strong>
-              {
-                requests.filter(
-                  (request) => request.status === "Allocated"
-                ).length
-              }
-            </strong>
+            <strong>{isLoading ? "..." : allocatedCount}</strong>
           </div>
 
           <div className="summary-box">
             <span>Completed</span>
-            <strong>
-              {
-                requests.filter(
-                  (request) => request.status === "Completed"
-                ).length
-              }
-            </strong>
+            <strong>{isLoading ? "..." : completedCount}</strong>
           </div>
         </div>
 
@@ -115,7 +155,7 @@ function MyRequests() {
           <div className="requests-table-top">
             <div>
               <h2>Request History</h2>
-              <p>Track the current status of your blood requests.</p>
+              <p>Track live allocation status and updates for your requests.</p>
             </div>
 
             <select
@@ -124,10 +164,12 @@ function MyRequests() {
               onChange={(event) => setFilter(event.target.value)}
             >
               <option value="All">All Requests</option>
-              <option value="Waiting">Waiting</option>
-              <option value="Allocated">Allocated</option>
-              <option value="Completed">Completed</option>
-              <option value="Rejected">Rejected</option>
+              <option value="WAITING">Waiting</option>
+              <option value="PAUSED">Paused</option>
+              <option value="PROCESSING">Processing</option>
+              <option value="ALLOCATED">Allocated</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
             </select>
           </div>
 
@@ -140,26 +182,33 @@ function MyRequests() {
                   <th>Quantity</th>
                   <th>Priority</th>
                   <th>Required Date</th>
+                  <th>Created Date</th>
                   <th>Status</th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredRequests.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "32px", color: "#6b7280" }}>
+                      Loading live requests from database...
+                    </td>
+                  </tr>
+                ) : filteredRequests.length > 0 ? (
                   filteredRequests.map((request) => (
-                    <tr key={request.id}>
+                    <tr key={request.request_id || request.request_code}>
                       <td>
                         <button
                           type="button"
                           className="request-id-button"
-                          onClick={() => navigate(`/hospital/requests/${request.id}`)}
+                          onClick={() => navigate(`/hospital/requests/${request.request_id || request.request_code}`)}
                         >
-                          {request.id}
+                          {request.request_code || `REQ-${request.request_id}`}
                         </button>
                       </td>
                       <td>
                         <span className="blood-group">
-                          {request.bloodGroup}
+                          {request.blood_group}
                         </span>
                       </td>
                       <td>{request.quantity} units</td>
@@ -168,7 +217,8 @@ function MyRequests() {
                           {request.priority}
                         </span>
                       </td>
-                      <td>{request.requiredDate}</td>
+                      <td>{formatDate(request.required_date)}</td>
+                      <td>{formatDate(request.created_at)}</td>
                       <td>
                         <span className={getStatusClass(request.status)}>
                           {request.status}
@@ -178,8 +228,8 @@ function MyRequests() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="no-requests">
-                      No requests found for the selected status.
+                    <td colSpan="7" className="no-requests" style={{ textAlign: "center", padding: "32px" }}>
+                      No blood requests found for the selected status.
                     </td>
                   </tr>
                 )}

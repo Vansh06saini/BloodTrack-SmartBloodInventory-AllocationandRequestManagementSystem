@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { authFetch } from "../../utils/auth";
 
 function DailyBloodLog() {
     const navigate = useNavigate();
@@ -34,7 +33,7 @@ function DailyBloodLog() {
             if (limit) params.append("limit", limit);
 
             const queryString = params.toString() ? `?${params.toString()}` : "";
-            const response = await authFetch(`http://localhost:5000/api/blood-units/daily-logs${queryString}`);
+            const response = await fetch(`http://localhost:5000/api/blood-units/daily-logs${queryString}`);
             const data = await response.json();
 
             if (!response.ok) {
@@ -246,7 +245,11 @@ function DailyBloodLog() {
                                             <td style={{ fontFamily: "monospace", fontSize: "13px", color: "#4b5563" }}>
                                                 {log.reference}
                                             </td>
-                                            <td>{log.details}</td>
+                                            <td>
+                                                {log.details && log.details.includes("Automatic expiry removal")
+                                                    ? `Unit ${log.unitId || ""}`
+                                                    : log.details}
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
@@ -265,4 +268,4 @@ function DailyBloodLog() {
     );
 }
 
-export default DailyBloodLog;
+export default DailyBloodLog;

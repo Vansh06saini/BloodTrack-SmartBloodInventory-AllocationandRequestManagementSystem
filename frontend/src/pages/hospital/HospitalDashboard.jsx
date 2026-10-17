@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authFetch } from "../../utils/auth";
 
 function HospitalDashboard() {
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ function HospitalDashboard() {
       setIsLoading(true);
       setError("");
 
-      const response = await authFetch(
+      const response = await fetch(
         `http://localhost:5000/api/hospital/dashboard?hospitalId=${hospitalId}`
       );
 

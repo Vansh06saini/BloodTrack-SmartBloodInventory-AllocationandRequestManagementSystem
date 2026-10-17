@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authFetch } from "../../utils/auth";
 
 function AdminDashboard() {
     const navigate = useNavigate();
@@ -30,7 +29,7 @@ function AdminDashboard() {
         try {
             setIsLoading(true);
             setError("");
-            const response = await authFetch("http://localhost:5000/api/blood-units/dashboard-summary");
+            const response = await fetch("http://localhost:5000/api/blood-units/dashboard-summary");
             const data = await response.json();
 
             if (!response.ok) {

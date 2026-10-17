@@ -243,6 +243,12 @@ export const getDailyBloodLogs = async (req, res) => {
                 ? (row.batch_number || `BATCH-${row.reference_id || row.unit_id || "N/A"}`)
                 : (row.request_code || (row.reference_id ? `REQ-${row.reference_id}` : "N/A"));
 
+            let details = row.remarks || (isIncoming ? "New blood units received" : "Allocated to hospital request");
+            if (details.includes("Automatic expiry removal") || details.includes("expired on")) {
+                const unitCode = row.unit_code || (row.unit_id ? `BU-${row.unit_id}` : "");
+                details = unitCode ? `Unit ${unitCode}` : details;
+            }
+
             return {
                 id: `LOG-${row.id}`,
                 rawId: row.id,
@@ -254,7 +260,7 @@ export const getDailyBloodLogs = async (req, res) => {
                 type: isIncoming ? "Incoming" : "Outgoing",
                 quantity: Number(row.quantity) || 1,
                 reference,
-                details: row.remarks || (isIncoming ? "New blood units received" : "Allocated to hospital request"),
+                details,
             };
         });
 
