@@ -1,0 +1,55 @@
+{
+  "model_type": "RandomForestRegressor(n_estimators=100, max_depth=12)",
+  "trained_at": "2026-10-26 18:50:12",
+  "training_samples": 4712,
+  "test_samples": 840,
+  "metrics": {
+    "overall_mae": 2.912,
+    "overall_rmse": 4.999
+  },
+  "feature_cols": [
+    "day_of_week",
+    "is_weekend",
+    "month",
+    "day_of_month",
+    "day_of_year",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_7",
+    "lag_14",
+    "rolling_mean_7",
+    "rolling_std_7",
+    "rolling_mean_14",
+    "rolling_mean_30",
+    "rolling_max_7",
+    "bg_A+",
+    "bg_A-",
+    "bg_AB+",
+    "bg_AB-",
+    "bg_B+",
+    "bg_B-",
+    "bg_O+",
+    "bg_O-"
+  ],
+  "target_cols": [
+    "target_day_1",
+    "target_day_2",
+    "target_day_3",
+    "target_day_4",
+    "target_day_5",
+    "target_day_6",
+    "target_day_7"
+  ],
+  "blood_groups": [
+    "A+",
+    "A-",
+    "B+",
+    "B-",
+    "AB+",
+    "AB-",
+    "O+",
+    "O-"
+  ],
+  "forecast_horizon_days": 7
+}

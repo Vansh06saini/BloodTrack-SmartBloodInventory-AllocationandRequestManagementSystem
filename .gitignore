@@ -27,3 +27,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Python AI Service
+backend/ai_service/venv/
+backend/ai_service/__pycache__/
+backend/ai_service/**/*.pyc
