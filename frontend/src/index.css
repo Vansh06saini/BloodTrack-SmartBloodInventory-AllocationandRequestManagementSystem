@@ -2159,3 +2159,282 @@ button {
     min-width: 100%;
   }
 }
+
+/* ==========================================================================
+   AI Demand Forecasting & Intelligence Styles
+   ========================================================================== */
+
+.ai-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid #ddd6fe;
+}
+
+.ai-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+  animation: aiPulse 2s infinite ease-in-out;
+}
+
+@keyframes aiPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* AI Alert Banner on Admin Dashboard */
+.admin-ai-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #fdf4ff 0%, #eef2ff 100%);
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 16px 22px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.06);
+}
+
+.admin-ai-alert-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.12);
+  border-color: #818cf8;
+}
+
+.admin-ai-alert-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-ai-alert-icon {
+  font-size: 26px;
+}
+
+.admin-ai-alert-left strong {
+  display: block;
+  font-size: 15px;
+  color: #1e1b4b;
+}
+
+.admin-ai-alert-left p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.admin-ai-alert-btn {
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-ai-alert-btn:hover {
+  background: #4338ca;
+}
+
+/* AI Filter Pills */
+.ai-group-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-pill-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ai-pill-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.ai-pill-btn.active {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+/* Matrix Table */
+.ai-matrix-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.ai-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.ai-matrix-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.ai-matrix-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.ai-matrix-table tr:hover {
+  background: #f8fafc;
+}
+
+.ai-bg-badge {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ai-balance-pill {
+  display: inline-block;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.ai-balance-pill.negative {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ai-balance-pill.positive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ai-risk-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ai-risk-badge.danger {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.ai-risk-badge.warning {
+  background: #fffbeb;
+  color: #f59e0b;
+  border: 1px solid #fde68a;
+}
+
+.ai-risk-badge.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.ai-risk-badge.info {
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+}
+
+.ai-model-footer {
+  margin-top: 24px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+
+/* AI Data Source Indicator */
+.ai-source-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid transparent;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-source-banner.real {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.ai-source-banner.real p {
+  color: #15803d;
+}
+
+.ai-source-banner.baseline {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.ai-source-banner.baseline p {
+  color: #2563eb;
+}
+
+.ai-source-meta-tag {
+  background: #ffffff;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+}

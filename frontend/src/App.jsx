@@ -10,6 +10,7 @@ import DonateBlood from "./pages/hospital/DonateBlood.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AddBloodUnits from "./pages/admin/AddBloodUnits.jsx";
 import DailyBloodLog from "./pages/admin/DailyBloodLog.jsx";
+import DemandPrediction from "./pages/admin/DemandPrediction.jsx";
 
 
 function App() {
@@ -55,6 +56,10 @@ function App() {
       {/* daily blood log */}
       <Route path="/admin/daily-log" element={<DailyBloodLog />} />
       <Route path="/admin/dailylog" element={<Navigate to="/admin/daily-log" replace />} />
+
+      {/* AI Demand Forecasting */}
+      <Route path="/admin/demand-prediction" element={<DemandPrediction />} />
+      <Route path="/admin/forecast" element={<Navigate to="/admin/demand-prediction" replace />} />
 
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/login" replace />} />

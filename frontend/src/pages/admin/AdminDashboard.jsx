@@ -22,6 +22,7 @@ function AdminDashboard() {
         lowStockGroups: 0,
     });
 
+    const [aiSummary, setAiSummary] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -29,15 +30,24 @@ function AdminDashboard() {
         try {
             setIsLoading(true);
             setError("");
-            const response = await fetch("http://localhost:5000/api/blood-units/dashboard-summary");
-            const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.message || "Failed to load dashboard data");
+            const [dashRes, aiRes] = await Promise.allSettled([
+                fetch("http://localhost:5000/api/blood-units/dashboard-summary"),
+                fetch("http://localhost:5000/api/predictions/demand-forecast")
+            ]);
+
+            if (dashRes.status === "fulfilled" && dashRes.value.ok) {
+                const data = await dashRes.value.json();
+                if (data.stock) setStock(data.stock);
+                if (data.summary) setSummary(data.summary);
             }
 
-            if (data.stock) setStock(data.stock);
-            if (data.summary) setSummary(data.summary);
+            if (aiRes.status === "fulfilled" && aiRes.value.ok) {
+                const aiData = await aiRes.value.json();
+                if (aiData.success && aiData.summary) {
+                    setAiSummary(aiData.summary);
+                }
+            }
         } catch (err) {
             console.error("Dashboard fetch error:", err);
             setError("Unable to connect to server for live inventory data.");
@@ -58,25 +68,60 @@ function AdminDashboard() {
                     <p>Manage and monitor blood bank inventory.</p>
                 </div>
 
-                <button
-                    type="button"
-                    className="admin-logout-button"
-                    onClick={() => {
-                        sessionStorage.removeItem("token");
-                        sessionStorage.removeItem("user");
-                        localStorage.removeItem("token");
-                        localStorage.removeItem("user");
-                        navigate("/login");
-                    }}
-                >
-                    Logout
-                </button>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                        type="button"
+                        className="admin-primary-button"
+                        style={{ background: "#4f46e5" }}
+                        onClick={() => navigate("/admin/demand-prediction")}
+                    >
+                        🤖 AI Demand Forecast
+                    </button>
+
+                    <button
+                        type="button"
+                        className="admin-logout-button"
+                        onClick={() => {
+                            sessionStorage.removeItem("token");
+                            sessionStorage.removeItem("user");
+                            localStorage.removeItem("token");
+                            localStorage.removeItem("user");
+                            navigate("/login");
+                        }}
+                    >
+                        Logout
+                    </button>
+                </div>
             </header>
 
             <main className="admin-dashboard-container">
                 {error && (
                     <div className="admin-form-message error" style={{ marginBottom: "1.5rem" }}>
                         {error}
+                    </div>
+                )}
+
+                {aiSummary && (
+                    <div
+                        className="admin-ai-alert-banner"
+                        onClick={() => navigate("/admin/demand-prediction")}
+                        role="button"
+                        tabIndex={0}
+                    >
+                        <div className="admin-ai-alert-left">
+                            <span className="admin-ai-alert-icon">🤖</span>
+                            <div>
+                                <strong>AI Forecast: {aiSummary.totalPredictedDemand} Units Needed in Next 7 Days</strong>
+                                <p>
+                                    {aiSummary.criticalShortageGroupsCount > 0
+                                        ? `⚠️ High Alert: ${aiSummary.criticalShortageGroupsCount} blood groups face critical stockouts based on hospital trends.`
+                                        : "Current inventory levels are aligned with anticipated demand."}
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" className="admin-ai-alert-btn">
+                            View Forecast & Deficit Matrix →
+                        </button>
                     </div>
                 )}
 
@@ -144,9 +189,9 @@ function AdminDashboard() {
                 </section>
 
                 <section className="admin-actions-section">
-                    <h2>Inventory Management</h2>
+                    <h2>Inventory Management & Intelligence</h2>
 
-                    <div className="admin-action-grid">
+                    <div className="admin-action-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                         <button
                             type="button"
                             onClick={() => navigate("/admin/addblood")}
@@ -159,6 +204,19 @@ function AdminDashboard() {
                             onClick={() => navigate("/admin/daily-log")}
                         >
                             View Daily Blood Log
+                        </button>
+
+                        <button
+                            type="button"
+                            style={{
+                                background: "#eef2ff",
+                                borderColor: "#c7d2fe",
+                                color: "#4338ca",
+                                fontWeight: "600",
+                            }}
+                            onClick={() => navigate("/admin/demand-prediction")}
+                        >
+                            🤖 AI Demand Forecast
                         </button>
                     </div>
                 </section>
