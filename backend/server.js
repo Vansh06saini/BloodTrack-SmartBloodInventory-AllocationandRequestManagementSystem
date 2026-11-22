@@ -28,10 +28,12 @@ app.use("/api/donations", donationRoutes);
 
 
 import allocationRoutes from "./routes/allocationRoutes.js";
+import predictionRoutes from "./routes/predictionRoutes.js";
 import { startAllocationWorker } from "./workers/allocationWorker.js";
 import { startExpiryWorker } from "./workers/expiryWorker.js";
 
 app.use("/api/allocation", allocationRoutes);
+app.use("/api/predictions", predictionRoutes);
 
 // Test route
 app.get("/", (req, res) => {
